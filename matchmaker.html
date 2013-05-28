@@ -91,6 +91,7 @@
 						<th>Tier Spread</th>
 						<th>Eff Spread</th>
 						<th>Time Until Filled (ms)</th>
+						<th># of Platoons</th>
 						<th># of Players</th>
 					</tr>
 				</thead>
@@ -122,6 +123,8 @@
 			<p>Match Eff Spread: {{this.lowerEff}} - {{this.upperEff}}</p>
 			<p>Time Created: {{this.timeCreated}}</p>
 			<p>Time Filled: {{this.timeFilled}}</p>
+			<p>Number of Platoons: {{this.platoons.length}}</p>
+			<p>Number of Players: {{this.numOfPlayers}}</p>
 			<table class="matchTable">
 				<thead>
 					<tr>
@@ -132,13 +135,15 @@
 					</tr>
 				</thead>
 				<tbody>
-					{{#each this.players}}
-						<tr>
-							<td>{{this.name}}</td>
-							<td>{{this.eff}}</td>
-							<td>{{this.tank.name}}</td>
-							<td>{{this.tank.tier}}</td>
-						</tr>
+					{{#each this.platoons}}
+						{{#each this.players}}
+							<tr>
+								<td>{{this.name}}</td>
+								<td>{{this.eff}}</td>
+								<td>{{this.tank.name}}</td>
+								<td>{{this.tank.tier}}</td>
+							</tr>
+						{{/each}}
 					{{/each}}
 				</tbody>
 			</table>

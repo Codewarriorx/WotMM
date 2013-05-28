@@ -1,5 +1,6 @@
 var tankTypes = ['light', 'medium', 'heavy', 'tank destroyer', 'artilary'];
 var population = [];
+var allPlatoons = [];
 
 $(document).ready(function() {
 	$('#playerTable').dataTable();
@@ -36,29 +37,33 @@ function matchMaker(){
 	madeMatches = [];
 	matchCounter = 0;
 
-	for (var i = 0; i < players.length; i++) { // loop through all players in queue
-		var player = getPlayer();
+	for (var i = 0; i < platoons.length; i++) { // loop through all platoons in queue
+		var platoon = getPlatoon();
 
-		if(unMadeMatches.length == 0 || checkUnMadeMatches(unMadeMatches, player) == -1){ // check if there are any un-made matches or if the player doesn't qualify for existing un-made matches
-			// create the match around the player stats and tank
+		if(unMadeMatches.length == 0 || checkUnMadeMatches(unMadeMatches, platoon) == -1){ // check if there are any un-made matches or if the platoon doesn't qualify for existing un-made matches
+			// create the match around the platoon stats and tank
 			var match = {
 				id: matchCounter,
-				upperTier: (player.tank.tier + 1),
-				lowerTier: (player.tank.tier - 1),
-				upperEff: (player.eff + 300),
-				lowerEff: (player.eff - 300),
-				players: [],
+				upperTier: (platoon.tier + 1),
+				lowerTier: (platoon.tier - 1),
+				upperEff: (platoon.eff + 300),
+				lowerEff: (platoon.eff - 300),
+				platoons: [],
+				numOfPlayers: 0,
 				timeCreated: Date.now(),
 				timeFilled: 0
 			}
-			match.players.push(player); // add player to the match
+			match.platoons.push(platoon); // add platoon to the match
+			match.numOfPlayers += platoon.numOfPlayers;
 			matchCounter++;
 			unMadeMatches.push(match); // add match to the un-made stack
 		}
-		else{ // player qualifies for a match
-			var matchIndex = checkUnMadeMatches(unMadeMatches, player); // get the index
-			unMadeMatches[matchIndex].players.push(player); // push player into the match
-			if(unMadeMatches[matchIndex].players.length == 15){ // is the match full?
+		else{ // platoon qualifies for a match
+			var matchIndex = checkUnMadeMatches(unMadeMatches, platoon); // get the index
+			unMadeMatches[matchIndex].platoons.push(platoon); // push platoon into the match
+			unMadeMatches[matchIndex].numOfPlayers += platoon.numOfPlayers;
+
+			if(unMadeMatches[matchIndex].numOfPlayers == 15){ // is the match full?
 				// put timestamp in match for when it was finished
 				unMadeMatches[matchIndex].timeFilled = Date.now();
 				// move match to the made matches stack
@@ -90,7 +95,7 @@ function displayMatches(){
 
 		$('#matchContainer').append(template(element));
 
-		data.push([element.id, element.lowerTier+' - '+element.upperTier, element.lowerEff+' - '+element.upperEff, element.timeFilled-element.timeCreated, element.players.length]);
+		data.push([element.id, element.lowerTier+' - '+element.upperTier, element.lowerEff+' - '+element.upperEff, element.timeFilled-element.timeCreated, element.platoons.length, element.numOfPlayers]);
 	});
 
 	unMadeMatches.forEach(function(element, index, array){
@@ -99,7 +104,7 @@ function displayMatches(){
 
 		$('#matchContainer').append(template(element));
 
-		data.push([element.id, element.lowerTier+' - '+element.upperTier, element.lowerEff+' - '+element.upperEff, element.timeFilled-element.timeCreated, element.players.length]);
+		data.push([element.id, element.lowerTier+' - '+element.upperTier, element.lowerEff+' - '+element.upperEff, element.timeFilled-element.timeCreated, element.platoons.length, element.numOfPlayers]);
 	});
 
 	$('.matchTable').dataTable();
@@ -107,23 +112,47 @@ function displayMatches(){
 	$('#matchSummary').dataTable().fnAddData(data);
 }
 
-function checkUnMadeMatches(unMadeMatches, player){
+function checkUnMadeMatches(unMadeMatches, platoon){
 	for (var i = 0; i < unMadeMatches.length; i++) {
-		if(qualifyForMatch(unMadeMatches[i], player)){
+		if(qualifyForMatch(unMadeMatches[i], platoon)){
 			return i;
 		}
 	}
 	return -1;
 }
 
-function qualifyForMatch(unMadeMatch, player){
-	if(unMadeMatch.upperTier >= player.tank.tier && player.tank.tier >= unMadeMatch.lowerTier){ // is the players tank inside the spread for the match?
-		if(unMadeMatch.upperEff >= player.eff && player.eff >= unMadeMatch.lowerEff){
-			// player qaulifies for this match
-			return true
+function qualifyForMatch(unMadeMatch, platoon){
+	if(unMadeMatch.upperTier >= platoon.tier && platoon.tier >= unMadeMatch.lowerTier){ // is the platoons tier inside the spread for the match?
+		if(unMadeMatch.upperEff >= platoon.eff && platoon.eff >= unMadeMatch.lowerEff){
+			// platoon qaulifies for this match, does it fit?
+			if((unMadeMatch.numOfPlayers + platoon.numOfPlayers) <= 15){
+				return true
+			}
 		}
 	}
 	return false;
+}
+
+function getPlatoonBySize(size){
+	var found = false;
+	do{
+		var id = Math.floor(Math.random()*platoons.length);
+		var platoon = platoons[id];
+
+		if(platoon.numOfPlayers <= size){
+			found = true;
+		}
+	}while(!found)
+
+	platoons.splice(id, 1);
+	return platoon;
+}
+
+function getPlatoon(){
+	var id = Math.floor(Math.random()*platoons.length);
+	var platoon = platoons[id];
+	platoons.splice(id, 1);
+	return platoon;
 }
 
 function getPlayer(){
@@ -249,6 +278,7 @@ function generatePlatoons(numOfPlayers){
 
 	$('#platoons').dataTable().fnClearTable();
 	$('#platoons').dataTable().fnAddData(data);
+	allPlatoons = platoons.slice();
 }
 
 function checkTotalPlayers(){
