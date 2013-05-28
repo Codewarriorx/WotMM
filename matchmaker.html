@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Wot Match Maker</title>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+	<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+	<script src="js/handlebars.js"></script>
+	<script src="DataTables-1.9.4/media/js/jquery.dataTables.min.js"></script>
+	<script src="js/main.js"></script>
+	<link rel="stylesheet" href="css/reset.css">
+	<link rel="stylesheet" href="css/960.css">
+	<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+	<link rel="stylesheet" href="DataTables-1.9.4/media/css/jquery.dataTables.css">
+	<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+	<div class="grid_12">
+		<div class="grid_12">
+			<h1>Wot Match Maker</h1>
+			<p>For now we're just using numbers to represent unique tanks. Eff rating spread that is generated for the players will be 300-2000 with mean of 900</p>
+			<p>When match making players will be taken randomly and put into the queue for the match maker, matches will be made with 2 tier tank spread and 400 eff spread</p>
+		</div>
+		<div class="clear"></div>
+		<div class="grid_6">
+			<form name="matchMakerSetup">
+				<label for="tankNum">Number of Tanks:</label>
+				<input type="text" name="tankNum">
+				<label for="tankNum">Number of Players:</label>
+				<input type="text" name="playerNum">
+				<input type="submit" name="generate" value="Generate">
+			</form>
+			<a href="#" name="matchmake">Start Match Making</a>
+		</div>
+		<div class="grid_6" id="stats"></div>
+		<div class="clear"></div>
+		
+		<div class="grid_4" id="tanksContainer">
+			<h2>Tanks:</h2>
+			<table id="tankTable">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Tier</th>
+						<th>Type</th>
+					</tr>
+				</thead>
+				<tbody>
+
+				</tbody>
+			</table>
+		</div>
+		<div class="grid_4" id="playersContainer">
+			<h2>Players:</h2>
+			<table id="playerTable">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Eff</th>
+						<th>Tank</th>
+					</tr>
+				</thead>
+				<tbody>
+
+				</tbody>
+			</table>
+		</div>
+		<div class="grid_4" id="platoonsContainer">
+			<h2>Platoons:</h2>
+			<table id="platoons">
+				<thead>
+					<tr>
+						<th>ID</th>
+						<th>Tier</th>
+						<th>Avg Eff</th>
+						<th># of Players</th>
+					</tr>
+				</thead>
+				<tbody>
+
+				</tbody>
+			</table>
+		</div>
+		<div class="clear"></div>
+		<div class="grid_12" id="matchSumContainer">
+			<h2>Matches:</h2>
+			<table id="matchSummary">
+				<thead>
+					<tr>
+						<th>ID</th>
+						<th>Tier Spread</th>
+						<th>Eff Spread</th>
+						<th>Time Until Filled (ms)</th>
+						<th># of Players</th>
+					</tr>
+				</thead>
+				<tbody>
+
+				</tbody>
+			</table>
+		</div>
+		<div class="clear"></div>
+		<div class="grid_12" id="matchContainer">
+		
+		</div>
+		<div class="clear"></div>
+	</div>
+
+
+	<!-- Templates -->
+	<script id="statListing" type="text/x-handlebars-template">
+		<p>Un-Made Matches: {{UnMadeMatches}}</p>
+		<p>Made Matches: {{madeMatches}}</p>
+		<p>Total Matches: {{total}}</p>
+	</script>
+
+
+	<script id="matchTable" type="text/x-handlebars-template">
+		<div class="grid_6">
+			<h2>Match {{this.id}}:</h2>
+			<p>Match Tier Spread: {{this.lowerTier}} - {{this.upperTier}}</p>
+			<p>Match Eff Spread: {{this.lowerEff}} - {{this.upperEff}}</p>
+			<p>Time Created: {{this.timeCreated}}</p>
+			<p>Time Filled: {{this.timeFilled}}</p>
+			<table class="matchTable">
+				<thead>
+					<tr>
+						<th>Player Name</th>
+						<th>Eff</th>
+						<th>Tank</th>
+						<th>Tier</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{#each this.players}}
+						<tr>
+							<td>{{this.name}}</td>
+							<td>{{this.eff}}</td>
+							<td>{{this.tank.name}}</td>
+							<td>{{this.tank.tier}}</td>
+						</tr>
+					{{/each}}
+				</tbody>
+			</table>
+		</div>
+		<div class="clear"></div>
+	</script>
+</body>
+</html>
