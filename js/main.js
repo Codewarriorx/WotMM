@@ -10,12 +10,15 @@ $(document).ready(function() {
 
 	$('input[name="generate"]').click(function(event){
 		event.preventDefault();
-		tankNum = $('input[name="tankNum"]').val();
 		playerNum = $('input[name="playerNum"]').val();
-
-		generateTanks(tankNum);
-		generatePlayers(playerNum);
-		generatePlatoons(playerNum);
+		if(playerNum != "" && !isNaN(playerNum)){
+			generateTanks();
+			generatePlayers(playerNum);
+			generatePlatoons(playerNum);
+		}
+		else{
+			alert('Please enter a number');
+		}
 	});
 
 	$('a[name="matchmake"]').click(function(event){
@@ -125,7 +128,7 @@ function qualifyForMatch(unMadeMatch, platoon){
 	if(unMadeMatch.upperTier >= platoon.tier && platoon.tier >= unMadeMatch.lowerTier){ // is the platoons tier inside the spread for the match?
 		if(unMadeMatch.upperEff >= platoon.eff && platoon.eff >= unMadeMatch.lowerEff){
 			// platoon qaulifies for this match, does it fit?
-			if((unMadeMatch.numOfPlayers + platoon.numOfPlayers) <= 15){
+			if((unMadeMatch.numOfPlayers + platoon.numOfPlayers) <= 30){
 				return true
 			}
 		}
@@ -177,25 +180,42 @@ function getPlayerByTier(tier){
 	return player;
 }
 
-function generateTanks(numOfTanks){
+function generateTanks(){
 	tanks = [];
 	var data = [];
 
-	for (var i = 0; i < numOfTanks; i++) {
+	for (var i = 0; i < tankInfo.levelArraySimple.length; i++) {
+		// get nation and type from the complete level array
+		var tankObj = getFullTankInfo(tankInfo.levelArraySimple[i].id, tankInfo.levelArraySimple[i].levelLow);
+		var nation = tankObj._country;
+		var type = tankObj._name.substring(0, tankObj._name.indexOf("_"));
+
 		var obj = {
-			name: i,
-			tier: Math.floor((Math.random()*10)+1),
-			type: tankTypes[Math.floor(Math.random()*tankTypes.length)],
-			battleTier: null,
-			nation: null
+			id: tankInfo.levelArraySimple[i].id,
+			name: tankInfo.levelArraySimple[i].name,
+			tier: tankInfo.levelArraySimple[i].levelLow,
+			type: type,
+			upperBattleTier: tankInfo.levelArraySimple[i].levelHigh,
+			lowerBattleTier: tankInfo.levelArraySimple[i].levelLow,
+			nation: nation
 		};
 
 		tanks.push(obj);
-		data.push([obj.name, obj.tier, obj.type]);
+		data.push([obj.name, obj.tier, obj.lowerBattleTier+' - '+obj.upperBattleTier, obj.type]);
 	}
 	
 	$('#tankTable').dataTable().fnClearTable();
 	$('#tankTable').dataTable().fnAddData(data);
+}
+
+function getFullTankInfo(id, tier){ // send in lowest tier from simple level array
+	var ele = null;
+	tankInfo.levelArray[tier].forEach(function(element){
+		if(element._id == id){
+			ele = element;
+		}
+	});
+	return ele;
 }
 
 function generatePlayers(numOfPlayers){

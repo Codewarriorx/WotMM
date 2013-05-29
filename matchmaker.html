@@ -7,6 +7,7 @@
 	<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 	<script src="js/handlebars.js"></script>
 	<script src="DataTables-1.9.4/media/js/jquery.dataTables.min.js"></script>
+	<script src="data/tanks.js"></script>
 	<script src="js/main.js"></script>
 	<link rel="stylesheet" href="css/reset.css">
 	<link rel="stylesheet" href="css/960.css">
@@ -24,8 +25,8 @@
 		<div class="clear"></div>
 		<div class="grid_6">
 			<form name="matchMakerSetup">
-				<label for="tankNum">Number of Tanks:</label>
-				<input type="text" name="tankNum">
+				<!-- <label for="tankNum">Number of Tanks:</label>
+				<input type="text" name="tankNum"> -->
 				<label for="tankNum">Number of Players:</label>
 				<input type="text" name="playerNum">
 				<input type="submit" name="generate" value="Generate">
@@ -42,6 +43,7 @@
 					<tr>
 						<th>Name</th>
 						<th>Tier</th>
+						<th>Battle Tiers</th>
 						<th>Type</th>
 					</tr>
 				</thead>
