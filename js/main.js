@@ -248,6 +248,9 @@ function generatePlatoons(numOfPlayers){
 			id: i,
 			eff: null,
 			tier: null,
+			upperBattleTier: null,
+			lowerBattleTier: null,
+			battlePoints: 0,
 			players: [],
 			numOfPlayers: 0
 		};
@@ -265,35 +268,45 @@ function generatePlatoons(numOfPlayers){
 			if(obj.eff == null || obj.tier == null){ // is this new?
 				obj.eff = player.eff;
 				obj.tier = player.tank.tier;
+				obj.upperBattleTier = player.tank.upperBattleTier;
+				obj.lowerBattleTier = player.tank.lowerBattleTier;
 			}
 			else{ // platoon isnt new, calc eff and tier
 				obj.eff = Math.floor((obj.eff + player.eff)/2); // avg platoon eff
-				if(obj.tier < player.tank.tier){
-					obj.tier = player.tank.tier; // if this players tier is higher than the platoon one set it to that
+
+				if(obj.tier < player.tank.tier){ // if this players tier is higher than the platoon one set it to that
+					obj.tier = player.tank.tier;
+					obj.upperBattleTier = player.tank.upperBattleTier;
+					obj.lowerBattleTier = player.tank.lowerBattleTier;
 				}
 			}
-
+			// calc battlePoints for player and tank
+			obj.battlePoints += Math.floor(player.eff / 100) + player.tank.tier;
 			obj.players.push(player);
 		}
 
 		platoons.push(obj);
-		data.push([obj.id, obj.tier, obj.eff, obj.numOfPlayers]);
+		data.push([obj.id, obj.tier, obj.eff, obj.battlePoints, obj.numOfPlayers]);
 	}
 	
 	var playersLeft = players.length;
 	
 	for (var i = 0; i < playersLeft; i++) { // gotta do 1 person platoons here
 		var player = getPlayer();
+
 		var obj = {
 			id: platoons.length,
 			eff: player.eff,
 			tier: player.tank.tier,
+			upperBattleTier: player.tank.upperBattleTier,
+			lowerBattleTier: player.tank.lowerBattleTier,
+			battlePoints: Math.floor(player.eff / 100) + player.tank.tier,
 			players: [player],
 			numOfPlayers: 1
 		};
 
 		platoons.push(obj);
-		data.push([obj.id, obj.tier, obj.eff, obj.numOfPlayers]);
+		data.push([obj.id, obj.tier, obj.eff, obj.battlePoints, obj.numOfPlayers]);
 	}
 
 	$('#platoons').dataTable().fnClearTable();
