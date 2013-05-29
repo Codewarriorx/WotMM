@@ -226,11 +226,14 @@ function generatePlayers(numOfPlayers){
 		var obj = {
 			name: i,
 			eff: Math.floor((Math.random()*1600)+300),
-			tank: tanks[Math.floor(Math.random()*tanks.length)]
+			tank: tanks[Math.floor(Math.random()*tanks.length)],
+			battlePoints: 0
 		};
 
+		obj.battlePoints = Math.floor(obj.eff / 100) + obj.tank.tier;
+
 		players.push(obj);
-		data.push([obj.name, obj.eff, obj.tank.name]);
+		data.push([obj.name, obj.eff, obj.tank.name, obj.battlePoints]);
 	}
 	population = players.slice();
 	console.log(population);
@@ -281,7 +284,7 @@ function generatePlatoons(numOfPlayers){
 				}
 			}
 			// calc battlePoints for player and tank
-			obj.battlePoints += Math.floor(player.eff / 100) + player.tank.tier;
+			obj.battlePoints += player.battlePoints;
 			obj.players.push(player);
 		}
 
