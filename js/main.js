@@ -42,7 +42,7 @@ Handlebars.registerHelper('list', function(platoons, options){
 			output += options.fn(platoons[p].players[i]);
 		}
 	}
-	
+
 	return output;
 });
 
@@ -61,8 +61,9 @@ function matchMaker(){
 			// create the match around the platoon stats and tank
 			var match = {
 				id: matchCounter,
-				upperTier: (platoon.tier + 1),
-				lowerTier: (platoon.tier - 1),
+				tier: platoon.tier,
+				upperTier: (platoon.tier),
+				lowerTier: (platoon.tier - 2),
 				upperEff: (platoon.eff + 200),
 				lowerEff: (platoon.eff - 200),
 				battlePoints: platoon.battlePoints,
@@ -141,7 +142,8 @@ function checkUnMadeMatches(unMadeMatches, platoon){
 }
 
 function qualifyForMatch(unMadeMatch, platoon){
-	if(unMadeMatch.upperTier >= platoon.tier && platoon.tier >= unMadeMatch.lowerTier){ // is the platoons tier inside the spread for the match?
+	// if((unMadeMatch.upperTier >= platoon.upperBattleTier && platoon.upperBattleTier >= unMadeMatch.lowerTier) || (unMadeMatch.upperTier >= platoon.lowerBattleTier && platoon.lowerBattleTier >= unMadeMatch.lowerTier)){ // is the platoons tier inside the spread for the match?
+	if((platoon.upperBattleTier >= unMadeMatch.tier && unMadeMatch.tier >= platoon.lowerBattleTier)){ // is the platoons tier inside the spread for the match?
 		if(unMadeMatch.upperEff >= platoon.eff && platoon.eff >= unMadeMatch.lowerEff){
 			// platoon qaulifies for this match, does it fit?
 			if((unMadeMatch.numOfPlayers + platoon.numOfPlayers) <= 30){
@@ -293,7 +295,7 @@ function generatePlatoons(numOfPlayers){
 			else{ // platoon isnt new, calc eff and tier
 				obj.eff = Math.floor((obj.eff + player.eff)/2); // avg platoon eff
 
-				if(obj.tier < player.tank.tier){ // if this players tier is higher than the platoon one set it to that
+				if(obj.upperBattleTier < player.tank.upperBattleTier){ // if this players tank has a higher battle tier than the platoon one set it to that
 					obj.tier = player.tank.tier;
 					obj.upperBattleTier = player.tank.upperBattleTier;
 					obj.lowerBattleTier = player.tank.lowerBattleTier;
