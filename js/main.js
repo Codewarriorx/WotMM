@@ -68,10 +68,17 @@ function matchMaker(){
 				lowerEff: (platoon.eff - 200),
 				battlePoints: platoon.battlePoints,
 				platoons: [],
+				artyPerTeam: [0, 0],
 				numOfPlayers: 0,
 				timeCreated: Date.now(),
+				teams: null,
 				timeFilled: 0
 			}
+
+			if(platoon.numOfArty > 0){
+				match.artyPerTeam[0] = platoon.numOfArty;
+			}
+
 			match.platoons.push(platoon); // add platoon to the match
 			match.numOfPlayers += platoon.numOfPlayers;
 			matchCounter++;
@@ -82,6 +89,13 @@ function matchMaker(){
 			unMadeMatches[matchIndex].platoons.push(platoon); // push platoon into the match
 			unMadeMatches[matchIndex].numOfPlayers += platoon.numOfPlayers;
 			unMadeMatches[matchIndex].battlePoints += platoon.battlePoints;
+			
+			if(platoon.numOfArty > 0 && (unMadeMatches[matchIndex].artyPerTeam[0] + platoon.numOfArty) <= 3){
+				unMadeMatches[matchIndex].artyPerTeam[0] += platoon.numOfArty;
+			}
+			else if(platoon.numOfArty > 0 && (unMadeMatches[matchIndex].artyPerTeam[1] + platoon.numOfArty) <= 3){
+				unMadeMatches[matchIndex].artyPerTeam[1] += platoon.numOfArty;
+			}
 
 			if(unMadeMatches[matchIndex].numOfPlayers == 30){ // is the match full?
 				// put timestamp in match for when it was finished
@@ -147,7 +161,16 @@ function qualifyForMatch(unMadeMatch, platoon){
 		if(unMadeMatch.upperEff >= platoon.eff && platoon.eff >= unMadeMatch.lowerEff){
 			// platoon qaulifies for this match, does it fit?
 			if((unMadeMatch.numOfPlayers + platoon.numOfPlayers) <= 30){
-				return true
+				// does the platoon have arty? if so does it fit?
+				if(platoon.numOfArty == 0){
+					return true; // no arty
+				}
+				else if((unMadeMatch.artyPerTeam[0] + platoon.numOfArty) <= 3){ // there is arty does it fit the first group
+					return true;
+				}
+				else if((unMadeMatch.artyPerTeam[1] + platoon.numOfArty) <= 3){ // does it fit the second group?
+					return true;
+				}
 			}
 		}
 	}
@@ -273,7 +296,8 @@ function generatePlatoons(numOfPlayers){
 			lowerBattleTier: null,
 			battlePoints: 0,
 			players: [],
-			numOfPlayers: 0
+			numOfPlayers: 0,
+			numOfArty: 0
 		};
 
 		var numPlayers = Math.floor(Math.random()*3)+1;
@@ -303,6 +327,9 @@ function generatePlatoons(numOfPlayers){
 			}
 			// calc battlePoints for player and tank
 			obj.battlePoints += player.battlePoints;
+			if(player.tank.type == "SPGs"){
+				obj.numOfArty++;
+			}
 			obj.players.push(player);
 		}
 
@@ -323,9 +350,12 @@ function generatePlatoons(numOfPlayers){
 			lowerBattleTier: player.tank.lowerBattleTier,
 			battlePoints: Math.floor(player.eff / 100) + player.tank.tier,
 			players: [player],
-			numOfPlayers: 1
+			numOfPlayers: 1,
+			numOfArty: 0
 		};
-
+		if(player.tank.type == "SPGs"){
+			obj.numOfArty++;
+		}
 		platoons.push(obj);
 		data.push([obj.id, obj.tier, obj.eff, obj.battlePoints, obj.numOfPlayers]);
 	}
