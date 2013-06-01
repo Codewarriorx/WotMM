@@ -17,122 +17,142 @@
 	<div class="navbar navbar-inverse">
 		<div class="navbar-inner">
 			<a class="brand" href="#">Wot Match Maker</a>
-			<ul class="nav">
-				<li class="active"><a href="#">Home</a></li>
-				<li><a href="#">Link</a></li>
-				<li><a href="#">Link</a></li>
+			<ul class="mainMenu nav">
+				<li class=""><a href="#">Home</a></li>
+				<li class="active"><a href="#">Static Match Maker</a></li>
+				<li><a href="#">Match Maker Simulator</a></li>
 			</ul>
 		</div>
 	</div>
 	<div class="container-fluid">
 		<div class="row-fluid">
-			<div class="span12">
-				<p>Eff rating spread that is generated for the players will be 300-2000 with mean of 900</p>
-				<p>When match making players will be taken randomly and put into the queue for the match maker, matches will be made with 2 tier tank spread and 400 eff spread</p>
+			<div class="span2">
+				<ul class="subMenu nav nav-list">
+					<li class="active"><a href="#controls">Controls</a></li>
+					<li><a href="#population">Population Info</a></li>
+					<li><a href="#matches">Matches</a></li>
+					<li class="nav-header">Match Listings</li>
+					<li><a href="#madeMatches">Made Matches</a></li>
+					<li><a href="#unMadeMatches">Un-Made Matches</a></li>
+				</ul>
 			</div>
-		</div>
-		<div class="row-fluid">
-			<div class="span6">
-				<form name="matchMakerSetup">
-					<span>Number of Tanks: 290</span>
-					<label for="tankNum">Number of Players:</label>
-					<input type="text" name="playerNum">
-					<input type="submit" class="btn" name="generate" value="Generate">
-				</form>
-				<a href="#" class="btn btn-primary" name="matchmake">Start Match Making</a>
-			</div>
-			<div class="span6" id="stats"></div>
-		</div>
-		<div class="row-fluid">
-			<div class="span4" id="tanksContainer">
-				<h2>Tanks:</h2>
-				<table id="tankTable">
-					<thead>
-						<tr>
-							<th>Name</th>
-							<th>Tier</th>
-							<th>Battle Tiers</th>
-							<th>Type</th>
-						</tr>
-					</thead>
-					<tbody>
-			
-					</tbody>
-				</table>
-			</div>
-			<div class="span4" id="playersContainer">
-				<h2>Players:</h2>
-				<table id="playerTable">
-					<thead>
-						<tr>
-							<th>Name</th>
-							<th>Eff</th>
-							<th>Tank</th>
-							<th>Battle Points</th>
-						</tr>
-					</thead>
-					<tbody>
-			
-					</tbody>
-				</table>
-			</div>
-			<div class="span4" id="platoonsContainer">
-				<h2>Platoons:</h2>
-				<table id="platoons">
-					<thead>
-						<tr>
-							<th>ID</th>
-							<th>Tier</th>
-							<th>Avg Eff</th>
-							<th>Battle Points</th>
-							<th># of Players</th>
-						</tr>
-					</thead>
-					<tbody>
-			
-					</tbody>
-				</table>
-			</div>
-		</div>
-		<div class="row-fluid">
-			<div class="span12" id="matchSumContainer">
-				<h2>Matches:</h2>
-				<table id="matchSummary">
-					<thead>
-						<tr>
-							<th>ID</th>
-							<th>Tier Spread</th>
-							<th>Eff Spread</th>
-							<th>Time Until Filled (ms)</th>
-							<th># of Platoons</th>
-							<th>Battle Points</th>
-							<th># of Players</th>
-						</tr>
-					</thead>
-					<tbody>
-			
-					</tbody>
-				</table>
-			</div>
-		</div>
-		<div class="row-fluid">
-			<div class="span12">
-				<h2>Match Listings</h2>
-				<h3>Made Matches:</h3>
-				<div class="accordion" id="madeContainer">
-					
+			<div class="span10">
+				<div class="row-fluid">
+					<div class="span12">
+						<p>Eff rating spread that is generated for the players will be 300-2000 with mean of 900</p>
+						<p>When match making players will be taken randomly and put into the queue for the match maker, matches will be made with 2 tier tank spread and 400 eff spread</p>
+					</div>
 				</div>
-				<h3>Un-Made Matches:</h3>
-				<div class="accordion" id="unMadeContainer">
+				<div id="controls" class="row-fluid section">
+					<div class="span6">
+						<form name="matchMakerSetup">
+							<span>Number of Tanks: 290</span>
+							<label for="tankNum">Number of Players:</label>
+							<input type="text" name="playerNum" placeholder="1000">
+							<input type="submit" class="btn" name="generate" value="Generate">
+						</form>
+						<a href="#" class="btn btn-primary" name="matchmake">Start Match Making</a>
+					</div>
+					<div class="span6" id="stats"></div>
+				</div>
+				<div id="population" class="row-fluid section hiddenSection">
+					<div class="span4" id="tanksContainer">
+						<h2>Tanks:</h2>
+						<table id="tankTable">
+							<thead>
+								<tr>
+									<th>Name</th>
+									<th>Tier</th>
+									<th>Battle Tiers</th>
+									<th>Type</th>
+								</tr>
+							</thead>
+							<tbody>
 					
+							</tbody>
+						</table>
+					</div>
+					<div class="span4" id="playersContainer">
+						<h2>Players:</h2>
+						<table id="playerTable">
+							<thead>
+								<tr>
+									<th>Name</th>
+									<th>Eff</th>
+									<th>Tank</th>
+									<th>Battle Points</th>
+								</tr>
+							</thead>
+							<tbody>
+					
+							</tbody>
+						</table>
+					</div>
+					<div class="span4" id="platoonsContainer">
+						<h2>Platoons:</h2>
+						<table id="platoons">
+							<thead>
+								<tr>
+									<th>ID</th>
+									<th>Tier</th>
+									<th>Avg Eff</th>
+									<th>Battle Points</th>
+									<th># of Players</th>
+								</tr>
+							</thead>
+							<tbody>
+					
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div id="matches" class="row-fluid section hiddenSection">
+					<div class="span12" id="matchSumContainer">
+						<h2>Matches:</h2>
+						<table id="matchSummary">
+							<thead>
+								<tr>
+									<th>ID</th>
+									<th>Tier Spread</th>
+									<th>Eff Spread</th>
+									<th>Time Until Filled (ms)</th>
+									<th># of Platoons</th>
+									<th>Battle Points</th>
+									<th># of Players</th>
+								</tr>
+							</thead>
+							<tbody>
+					
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div id="madeMatches" class="row-fluid section hiddenSection">
+					<div class="span12">
+						<h2>Made Matches</h2>
+						<div class="accordion" id="madeContainer">
+							
+						</div>
+					</div>
+				</div>
+				<div id="unMadeMatches" class="row-fluid section hiddenSection">
+					<div class="span12">
+						<h2>Un-Made Matches</h2>
+						<div class="accordion" id="unMadeContainer">
+							
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 
+		
+
 
 	<!-- Templates -->
 	<script id="statListing" type="text/x-handlebars-template">
+		<h3>Stats:</h3>
 		<p>Un-Made Matches: {{UnMadeMatches}}</p>
 		<p>Made Matches: {{madeMatches}}</p>
 		<p>Total Matches: {{total}}</p>

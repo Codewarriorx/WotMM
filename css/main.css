@@ -1,0 +1,15 @@
+body{
+	min-width: 960px;
+}
+
+#tanksContainer select, #playersContainer select, #platoonsContainer select, #matchSumContainer select{
+	width: auto;
+}
+
+#matchContainer .dataTables_wrapper+h3{
+	margin-top: 30px;
+}
+
+.hiddenSection{
+	display: none;
+}

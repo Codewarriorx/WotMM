@@ -11,6 +11,11 @@ $(document).ready(function() {
 	$('input[name="generate"]').click(function(event){
 		event.preventDefault();
 		playerNum = $('input[name="playerNum"]').val();
+		if(playerNum == ""){
+			playerNum = 1000;
+			$('input[name="playerNum"]').val(1000);
+		}
+
 		if(playerNum != "" && !isNaN(playerNum)){
 			generateTanks();
 			generatePlayers(playerNum);
@@ -34,6 +39,15 @@ $(document).ready(function() {
 			
 			matchMaker();
 		}
+	});
+
+	$('.subMenu a').click(function(event){
+		event.preventDefault();
+		$('.subMenu > li').removeClass('active');
+		$(this).parent().addClass('active');
+		$('.section').addClass('hiddenSection');
+		var sectionID = $(this).attr('href');
+		$(sectionID).removeClass('hiddenSection');
 	});
 });
 
@@ -178,7 +192,7 @@ function balanceTeams(){
 
 function displayMatches(){
 	var data = [];
-	
+
 	// Clear containers
 	$('#madeContainer').html('');
 	$('#unMadeContainer').html('');
