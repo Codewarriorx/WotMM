@@ -27,6 +27,11 @@ $(document).ready(function() {
 			alert('Please generate some tanks and players first');
 		}
 		else{
+			if((typeof matchCounter !== "undefined")){
+				// clear any existing match listing tables
+				$('.matchTable').dataTable().fnDestroy();
+			}
+			
 			matchMaker();
 		}
 	});
@@ -68,6 +73,7 @@ function matchMaker(){
 				lowerEff: (platoon.eff - 200),
 				battlePoints: platoon.battlePoints,
 				platoons: [],
+				playersPerTeam: [0, 0],
 				artyPerTeam: [0, 0],
 				numOfPlayers: 0,
 				timeCreated: Date.now(),
@@ -79,6 +85,7 @@ function matchMaker(){
 				match.artyPerTeam[0] = platoon.numOfArty;
 			}
 
+			match.playersPerTeam[0] = platoon.numOfPlayers;
 			match.platoons.push(platoon); // add platoon to the match
 			match.numOfPlayers += platoon.numOfPlayers;
 			matchCounter++;
@@ -95,6 +102,13 @@ function matchMaker(){
 			}
 			else if(platoon.numOfArty > 0 && (unMadeMatches[matchIndex].artyPerTeam[1] + platoon.numOfArty) <= 3){
 				unMadeMatches[matchIndex].artyPerTeam[1] += platoon.numOfArty;
+			}
+
+			if((unMadeMatches[matchIndex].playersPerTeam[0] + platoon.numOfPlayers) <= 15){
+				unMadeMatches[matchIndex].playersPerTeam[0] += platoon.numOfPlayers;
+			}
+			else{
+				unMadeMatches[matchIndex].playersPerTeam[1] += platoon.numOfPlayers;
 			}
 
 			if(unMadeMatches[matchIndex].numOfPlayers == 30){ // is the match full?
@@ -143,15 +157,20 @@ function balanceTeams(){
 		}];
 
 		for (var i = 0; i < madeMatches[m].platoons.length; i++) {
-			if(madeMatches[m].teams[0].battlePoints <= madeMatches[m].teams[1].battlePoints){ // put platoon into team 1
+			if(madeMatches[m].teams[0].battlePoints <= madeMatches[m].teams[1].battlePoints && (madeMatches[m].teams[0].numOfPlayers + madeMatches[m].platoons[i].numOfPlayers) <= 15){ // put platoon into team 1
 				madeMatches[m].teams[0].platoons.push(madeMatches[m].platoons[i]);
 				madeMatches[m].teams[0].battlePoints += madeMatches[m].platoons[i].battlePoints;
 				madeMatches[m].teams[0].numOfPlayers += madeMatches[m].platoons[i].numOfPlayers;
 			}
-			else{ // put platoon into team 2
+			else if( (madeMatches[m].teams[1].numOfPlayers + madeMatches[m].platoons[i].numOfPlayers) <= 15 ){ // put platoon into team 2 if not full
 				madeMatches[m].teams[1].platoons.push(madeMatches[m].platoons[i]);
 				madeMatches[m].teams[1].battlePoints += madeMatches[m].platoons[i].battlePoints;
 				madeMatches[m].teams[1].numOfPlayers += madeMatches[m].platoons[i].numOfPlayers;
+			}
+			else{ // put platoon into team 1, this is because team 2 is full
+				madeMatches[m].teams[0].platoons.push(madeMatches[m].platoons[i]);
+				madeMatches[m].teams[0].battlePoints += madeMatches[m].platoons[i].battlePoints;
+				madeMatches[m].teams[0].numOfPlayers += madeMatches[m].platoons[i].numOfPlayers;
 			}
 		}
 	}
@@ -159,11 +178,16 @@ function balanceTeams(){
 
 function displayMatches(){
 	var data = [];
+	
+	// Clear containers
+	$('#madeContainer').html('');
+	$('#unMadeContainer').html('');
+
 	madeMatches.forEach(function(element, index, array){
 		var source = $('#matchTable').html();
 		var template = Handlebars.compile(source);
 
-		$('#matchContainer').append(template(element));
+		$('#madeContainer').append(template(element));
 
 		data.push([element.id, element.lowerTier+' - '+element.upperTier, element.lowerEff+' - '+element.upperEff, element.timeFilled-element.timeCreated, element.platoons.length, element.battlePoints, element.numOfPlayers]);
 	});
@@ -172,7 +196,7 @@ function displayMatches(){
 		var source = $('#matchTable').html();
 		var template = Handlebars.compile(source);
 
-		$('#matchContainer').append(template(element));
+		$('#unMadeContainer').append(template(element));
 
 		data.push([element.id, element.lowerTier+' - '+element.upperTier, element.lowerEff+' - '+element.upperEff, element.timeFilled-element.timeCreated, element.platoons.length, element.battlePoints, element.numOfPlayers]);
 	});
@@ -196,7 +220,7 @@ function qualifyForMatch(unMadeMatch, platoon){
 	if((platoon.upperBattleTier >= unMadeMatch.tier && unMadeMatch.tier >= platoon.lowerBattleTier)){ // is the platoons tier inside the spread for the match?
 		if(unMadeMatch.upperEff >= platoon.eff && platoon.eff >= unMadeMatch.lowerEff){
 			// platoon qaulifies for this match, does it fit?
-			if((unMadeMatch.numOfPlayers + platoon.numOfPlayers) <= 30){
+			if( (unMadeMatch.numOfPlayers + platoon.numOfPlayers) <= 30 && ( (unMadeMatch.playersPerTeam[0] + platoon.numOfPlayers) <= 15 || (unMadeMatch.playersPerTeam[1] + platoon.numOfPlayers) <= 15) ){
 				// does the platoon have arty? if so does it fit?
 				if(platoon.numOfArty == 0){
 					return true; // no arty
