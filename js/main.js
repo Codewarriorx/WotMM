@@ -118,7 +118,43 @@ function matchMaker(){
 	var template = Handlebars.compile(source);
 
 	$('#stats').html(template(stats));
+	balanceTeams();
 	displayMatches();
+}
+
+function balanceTeams(){
+	for (var m = 0; m < madeMatches.length; m++) {
+		// sort platoons according to battle points
+		madeMatches[m].platoons.sort(function(ele1, ele2){
+			return ele2.battlePoints - ele1.battlePoints;
+		});
+
+		madeMatches[m].teams = [{
+			id: 1,
+			platoons: [],
+			battlePoints: 0,
+			numOfPlayers: 0
+		},
+		{
+			id: 2,
+			platoons: [],
+			battlePoints: 0,
+			numOfPlayers: 0
+		}];
+
+		for (var i = 0; i < madeMatches[m].platoons.length; i++) {
+			if(madeMatches[m].teams[0].battlePoints <= madeMatches[m].teams[1].battlePoints){ // put platoon into team 1
+				madeMatches[m].teams[0].platoons.push(madeMatches[m].platoons[i]);
+				madeMatches[m].teams[0].battlePoints += madeMatches[m].platoons[i].battlePoints;
+				madeMatches[m].teams[0].numOfPlayers += madeMatches[m].platoons[i].numOfPlayers;
+			}
+			else{ // put platoon into team 2
+				madeMatches[m].teams[1].platoons.push(madeMatches[m].platoons[i]);
+				madeMatches[m].teams[1].battlePoints += madeMatches[m].platoons[i].battlePoints;
+				madeMatches[m].teams[1].numOfPlayers += madeMatches[m].platoons[i].numOfPlayers;
+			}
+		}
+	}
 }
 
 function displayMatches(){
