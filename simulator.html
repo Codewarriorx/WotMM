@@ -9,7 +9,7 @@
 	<script src="js/bootstrap.min.js"></script>
 	<script src="data/tanks.js"></script>
 	<script src="js/main.js"></script>
-	<script src="js/matchmaker.js"></script>
+	<script src="js/simulator.js"></script>
 	<link rel="stylesheet" href="css/bootstrap.min.css">
 	<link rel="stylesheet" href="DataTables-1.9.4/media/css/jquery.dataTables.css">
 	<link rel="stylesheet" href="css/main.css">
@@ -20,8 +20,8 @@
 			<a class="brand" href="index.html">Wot Match Maker</a>
 			<ul class="mainMenu nav">
 				<li class=""><a href="index.html">Home</a></li>
-				<li class="active"><a href="matchmaker.html">Static Match Maker</a></li>
-				<li><a href="simulator.html">Match Maker Simulator</a></li>
+				<li class=""><a href="matchmaker.html">Static Match Maker</a></li>
+				<li class="active"><a href="simulator.html">Match Maker Simulator</a></li>
 			</ul>
 		</div>
 	</div>
@@ -49,10 +49,10 @@
 						<form name="matchMakerSetup">
 							<span>Number of Tanks: 290</span>
 							<label for="tankNum">Number of Players:</label>
-							<input type="text" name="playerNum" placeholder="1000">
-							<input type="submit" class="btn" name="generate" value="Generate">
+							<input type="text" name="playerNum" placeholder="20000">
+							<input type="submit" class="btn" name="prepare" value="Prepare">
 						</form>
-						<a href="#" class="btn btn-primary" name="matchmake">Start Match Making</a>
+						<a href="#" class="btn btn-primary" name="simulator">Start Simulator</a>
 					</div>
 					<div class="span6" id="stats"></div>
 				</div>
@@ -78,10 +78,9 @@
 						<table id="playerTable">
 							<thead>
 								<tr>
+									<th>ID</th>
 									<th>Name</th>
 									<th>Eff</th>
-									<th>Tank</th>
-									<th>Battle Points</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -154,9 +153,42 @@
 	<!-- Templates -->
 	<script id="statListing" type="text/x-handlebars-template">
 		<h3>Stats:</h3>
-		<p>Un-Made Matches: {{UnMadeMatches}}</p>
-		<p>Made Matches: {{madeMatches}}</p>
-		<p>Total Matches: {{total}}</p>
+		<p>Number of Platoons: {{numOfPlatoons}}</p>
+		<p>Number of Players: {{numOfPlayers}}</p>
+		<p>Average Eff: {{avgEff}}</p>
+
+		<h4>Tanks by Tier:</h4>
+		<table class="table table-condensed">
+			<thead>
+				<tr>
+					<th>Tier</th>
+					<th>Count</th>
+				</tr>
+			</thead>
+			<tbody>
+				{{#byTier tanksByTier}}
+					<tr>
+						<td>{{tier}}</td><td>{{count}}</td>
+					</tr>
+				{{/byTier}}
+			</tbody>
+		</table>
+		<h4>Tanks by Type:</h4>
+		<table class="table table-condensed">
+			<thead>
+				<tr>
+					<th>Type</th>
+					<th>Count</th>
+				</tr>
+			</thead>
+			<tbody>
+				{{#byType tanksByType}}
+					<tr>
+						<td>{{type}}</td><td>{{count}}</td>
+					</tr>
+				{{/byType}}
+			</tbody>
+		</table>
 	</script>
 
 	<script id="matchTable" type="text/x-handlebars-template">
