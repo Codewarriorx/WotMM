@@ -115,7 +115,7 @@
 									<th>ID</th>
 									<th>Tier Spread</th>
 									<th>Eff Spread</th>
-									<th>Time Until Filled (ms)</th>
+									<th>Time Until Filled (sec)</th>
 									<th># of Platoons</th>
 									<th>Battle Points</th>
 									<th># of Players</th>
@@ -152,10 +152,16 @@
 
 	<!-- Templates -->
 	<script id="statListing" type="text/x-handlebars-template">
-		<h3>Stats:</h3>
-		<p>Number of Platoons: {{numOfPlatoons}}</p>
-		<p>Number of Players: {{numOfPlayers}}</p>
+		<h3>Stats for Match Making Queue:</h3>
+		<p>Players Not in Queue: {{popNotInQueue}}</p>
+		<p>Players in Queue: {{numOfPlayers}}</p>
+		<p>Platoons in Queue: {{numOfPlatoons}}</p>
+		<p>Total Platoons: {{totalPlatoons}}</p>
+		
 		<p>Average Eff: {{avgEff}}</p>
+		<p>Made Matches: {{madeMatches}}</p>
+		<p>Un-Made Matches: {{unMadeMatches}}</p>
+		<p>Avg Time to Complete Match: {{avgMatchTime}} (sec)</p>
 
 		<h4>Tanks by Tier:</h4>
 		<table class="table table-condensed">

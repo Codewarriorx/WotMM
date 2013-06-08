@@ -1,7 +1,13 @@
 var matchQueue = [];
+var unMadeMatches = [];
+var madeMatches = [];
+var matchCounter = 0;
 var players = [];
 var platoonCounter = 0;
-var tankTypes = {'Tank Destroyers': 0, 'Heavy Tank': 0, 'Medium Tank': 0, 'Light Tank': 0, 'SPGs': 0}
+var tankTypes = {'Tank Destroyers': 0, 'Heavy Tank': 0, 'Medium Tank': 0, 'Light Tank': 0, 'SPGs': 0};
+var simulatorStart = 0;
+var simulatorEnd = 0;
+var platoons = [];
 
 $(document).ready(function() {
 	generateTanks();
@@ -88,29 +94,193 @@ Handlebars.registerHelper('byType', function(tanksByType, options){
 });
 
 function simulator(){
+	simulatorStart = Date.now();
+
 	var loop = setInterval(function(){
-		var numOfPlatoons = Math.floor(Math.random()*5);
+		if(players.length > 50){
+			var numOfPlatoons = Math.floor(Math.random()*5);
 
-		for (var p = 0; p < numOfPlatoons; p++) {
-			var platoon = generatePlatoon();
-			matchQueue[platoon.id] = platoon;
-			platoonCounter++;
+			for (var p = 0; p < numOfPlatoons; p++) {
+				var platoon = generatePlatoon();
+				matchQueue.push(platoon);
+				platoonCounter++;
+			}
+
+			var stats = {
+				numOfPlatoons: matchQueue.length,
+				numOfPlayers: countPlayersInQueue(),
+				tanksByTier: countTanksByTier(),
+				tanksByType: countTanksByType(),
+				avgEff: calcAvgEff(),
+				popNotInQueue: players.length,
+				madeMatches: madeMatches.length,
+				unMadeMatches: unMadeMatches.length,
+				avgMatchTime: calcAvgMatchTime(),
+				totalPlatoons: platoons.length
+			};
+
+			var source = $('#statListing').html();
+			var template = Handlebars.compile(source);
+
+			$('#stats').html(template(stats));
+			matchMaker();
 		}
-		
-		var stats = {
-			numOfPlatoons: matchQueue.length,
-			numOfPlayers: countPlayersInQueue(),
-			tanksByTier: countTanksByTier(),
-			tanksByType: countTanksByType(),
-			avgEff: calcAvgEff()
-		};
-
-		var source = $('#statListing').html();
-		var template = Handlebars.compile(source);
-
-		$('#stats').html(template(stats));
+		else{
+			simulatorEnd = Date.now();
+		}
 	}, 1000);
 }
+
+function matchMaker(){
+	console.log('match making');
+	// $('#matchContainer').html('');
+
+	matchQueue.forEach(function(element, index){ // loop through all platoons in queue
+		var platoon = element;
+
+		if(platoon.inQueue){
+			platoon.inQueue = false;
+			if(unMadeMatches.length == 0 || checkUnMadeMatches(unMadeMatches, platoon) == -1){ // check if there are any un-made matches or if the platoon doesn't qualify for existing un-made matches
+				// create the match around the platoon stats and tank
+				var match = {
+					id: matchCounter,
+					tier: platoon.tier,
+					upperTier: (platoon.tier),
+					lowerTier: (platoon.tier - 2),
+					upperEff: (platoon.eff + 200),
+					lowerEff: (platoon.eff - 200),
+					battlePoints: platoon.battlePoints,
+					platoons: [],
+					playersPerTeam: [0, 0],
+					artyPerTeam: [0, 0],
+					numOfPlayers: 0,
+					timeCreated: Date.now(),
+					teams: null,
+					timeFilled: 0
+				}
+
+				if(platoon.numOfArty > 0){
+					match.artyPerTeam[0] = platoon.numOfArty;
+				}
+
+				match.playersPerTeam[0] = platoon.numOfPlayers;
+				match.platoons.push(platoon); // add platoon to the match
+				match.numOfPlayers += platoon.numOfPlayers;
+				matchCounter++;
+				unMadeMatches.push(match); // add match to the un-made stack
+			}
+			else{ // platoon qualifies for a match
+				var matchIndex = checkUnMadeMatches(unMadeMatches, platoon); // get the index
+				unMadeMatches[matchIndex].platoons.push(platoon); // push platoon into the match
+				unMadeMatches[matchIndex].numOfPlayers += platoon.numOfPlayers;
+				unMadeMatches[matchIndex].battlePoints += platoon.battlePoints;
+				
+				if(platoon.numOfArty > 0 && (unMadeMatches[matchIndex].artyPerTeam[0] + platoon.numOfArty) <= 3){
+					unMadeMatches[matchIndex].artyPerTeam[0] += platoon.numOfArty;
+				}
+				else if(platoon.numOfArty > 0 && (unMadeMatches[matchIndex].artyPerTeam[1] + platoon.numOfArty) <= 3){
+					unMadeMatches[matchIndex].artyPerTeam[1] += platoon.numOfArty;
+				}
+
+				if((unMadeMatches[matchIndex].playersPerTeam[0] + platoon.numOfPlayers) <= 15){
+					unMadeMatches[matchIndex].playersPerTeam[0] += platoon.numOfPlayers;
+				}
+				else{
+					unMadeMatches[matchIndex].playersPerTeam[1] += platoon.numOfPlayers;
+				}
+
+				if(unMadeMatches[matchIndex].numOfPlayers == 30){ // is the match full?
+					// put timestamp in match for when it was finished
+					unMadeMatches[matchIndex].timeFilled = Date.now();
+					// move match to the made matches stack
+					madeMatches.push(unMadeMatches[matchIndex]);
+
+					// add match to table --new
+					$('#matchSummary').dataTable().fnAddData([unMadeMatches[matchIndex].id, unMadeMatches[matchIndex].lowerTier+' - '+unMadeMatches[matchIndex].upperTier, unMadeMatches[matchIndex].lowerEff+' - '+unMadeMatches[matchIndex].upperEff, Math.floor((unMadeMatches[matchIndex].timeFilled-unMadeMatches[matchIndex].timeCreated)/1000), unMadeMatches[matchIndex].platoons.length, unMadeMatches[matchIndex].battlePoints, unMadeMatches[matchIndex].numOfPlayers]);
+					var source = $('#matchTable').html();
+					var template = Handlebars.compile(source);
+					$('#madeContainer').append(template(unMadeMatches[matchIndex]));
+					$('.accordion-group').last().find('.matchTable').dataTable();
+
+					// remove platoons from queue --new
+					removeFromQueue(unMadeMatches[matchIndex].platoons);
+
+					// remove match from un-made matches
+					unMadeMatches.splice(matchIndex, 1);
+					console.log('match complete');
+				}
+			}
+		}
+	});
+
+	/*var stats = {
+		UnMadeMatches: unMadeMatches.length,
+		madeMatches: madeMatches.length,
+		total: matchCounter
+	};
+
+	var source = $('#statListing').html();
+	var template = Handlebars.compile(source);
+
+	$('#stats').html(template(stats));
+	balanceTeams();
+	displayMatches();*/
+}
+
+function displayMatches(){
+	var data = [];
+
+	// Clear containers
+	$('#madeContainer').html('');
+	$('#unMadeContainer').html('');
+
+	madeMatches.forEach(function(element, index, array){
+		/*var source = $('#matchTable').html();
+		var template = Handlebars.compile(source);
+
+		$('#madeContainer').append(template(element));*/
+
+		data.push([element.id, element.lowerTier+' - '+element.upperTier, element.lowerEff+' - '+element.upperEff, element.timeFilled-element.timeCreated, element.platoons.length, element.battlePoints, element.numOfPlayers]);
+	});
+
+/*	unMadeMatches.forEach(function(element, index, array){
+		var source = $('#matchTable').html();
+		var template = Handlebars.compile(source);
+
+		$('#unMadeContainer').append(template(element));
+
+		data.push([element.id, element.lowerTier+' - '+element.upperTier, element.lowerEff+' - '+element.upperEff, element.timeFilled-element.timeCreated, element.platoons.length, element.battlePoints, element.numOfPlayers]);
+	});*/
+
+	// $('.matchTable').dataTable();
+	$('#matchSummary').dataTable().fnClearTable();
+	$('#matchSummary').dataTable().fnAddData(data);
+}
+
+function removeFromQueue(platoonsList){
+	console.log('removing platoons from queue');
+
+	platoonsList.forEach(function(element, index){
+		var i = matchQueue.indexOf(element);
+		matchQueue.splice(i, 1);
+	});
+}
+
+/*function getPlatoon(){
+	var found = false;
+	do{
+		var id = Math.floor(Math.random()*matchQueue.length);
+		var platoon = matchQueue[id];
+
+		if(platoon.inQueue){
+			found = true;
+		}
+	}while(!found)
+	
+	matchQueue[id].inQueue = false;
+	// matchQueue.splice(id, 1);
+	return platoon;
+}*/
 
 function generatePlatoon(){
 	var platoon = {
@@ -124,7 +294,8 @@ function generatePlatoon(){
 		numOfPlayers: Math.floor(Math.random()*3)+1,
 		tanksByTier: [],
 		tanksByType: $.extend(true,{},tankTypes),
-		numOfArty: 0
+		numOfArty: 0,
+		inQueue: true
 	};
 
 	for (var i = 0; i < platoon.numOfPlayers; i++) {
@@ -166,6 +337,8 @@ function generatePlatoon(){
 		platoon.players.push(player);
 	}
 
+	$('#platoons').dataTable().fnAddData([platoon.id, platoon.tier, platoon.eff, platoon.battlePoints, platoon.numOfPlayers]);
+	platoons.push(platoon);
 	return platoon;
 }
 
@@ -189,9 +362,9 @@ function getTankByTier(tier){
 function countPlayersInQueue(){
 	var count = 0;
 
-	for (var i = 0; i < matchQueue.length; i++) {
-		count += matchQueue[i].numOfPlayers;
-	}
+	matchQueue.forEach(function(element, index){
+		count += element.numOfPlayers;
+	});
 
 	return count;
 }
@@ -199,18 +372,18 @@ function countPlayersInQueue(){
 function countTanksByTier(){
 	var tanksByTier = [];
 
-	for (var i = 0; i < matchQueue.length; i++) {
-		for(var x = 0; x < matchQueue[i].tanksByTier.length; x++){
-			if(typeof matchQueue[i].tanksByTier[x] !== "undefined"){
+	matchQueue.forEach(function(element, index){
+		for(var x = 0; x < element.tanksByTier.length; x++){
+			if(typeof element.tanksByTier[x] !== "undefined"){
 				if(typeof tanksByTier[x] === "undefined"){
-					tanksByTier[x] = matchQueue[i].tanksByTier[x];
+					tanksByTier[x] = element.tanksByTier[x];
 				}
 				else{
-					tanksByTier[x] += matchQueue[i].tanksByTier[x];
+					tanksByTier[x] += element.tanksByTier[x];
 				}
 			}
 		}
-	}
+	});
 
 	return tanksByTier;
 }
@@ -218,11 +391,11 @@ function countTanksByTier(){
 function countTanksByType(){
 	var tanksByType = $.extend(true,{},tankTypes);
 
-	for (var i = 0; i < matchQueue.length; i++) {
-		for(key in matchQueue[i].tanksByType){
-			tanksByType[key] += matchQueue[i].tanksByType[key];
+	matchQueue.forEach(function(element, index){
+		for(key in element.tanksByType){
+			tanksByType[key] += element.tanksByType[key];
 		}
-	}
+	});
 
 	return tanksByType;
 }
@@ -230,9 +403,19 @@ function countTanksByType(){
 function calcAvgEff(){
 	var totalEff = 0;
 
-	for (var i = 0; i < matchQueue.length; i++) {
-		totalEff += matchQueue[i].eff;
-	}
+	matchQueue.forEach(function(element, index){
+		totalEff += element.eff;
+	});
 
 	return Math.floor(totalEff / matchQueue.length);
+}
+
+function calcAvgMatchTime(){
+	var totalSeconds = 0;
+
+	madeMatches.forEach(function(match, index){
+		totalSeconds += Math.floor((match.timeFilled-match.timeCreated)/1000);
+	});
+
+	return Math.floor(totalSeconds / madeMatches.length);
 }
