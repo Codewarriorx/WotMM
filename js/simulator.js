@@ -93,12 +93,26 @@ Handlebars.registerHelper('byType', function(tanksByType, options){
 	return output;
 });
 
+Handlebars.registerHelper('timeLapsed', function(match){
+	return ((match.timeFilled - match.timeCreated) / 60000).toFixed(2);
+});
+
+Handlebars.registerHelper('matchLength', function(match){
+	return (match.matchEnd - match.timeFilled) / 60000;
+});
+
+Handlebars.registerHelper('timeFormat', function(time){
+	var date = new Date(time);
+
+	return date.getHours() + ':' + date.getMinutes();
+});
+
 function simulator(){
 	simulatorStart = Date.now();
 
 	var loop = setInterval(function(){
 		if(players.length > 50){
-			var numOfPlatoons = Math.floor(Math.random()*5);
+			var numOfPlatoons = Math.floor(Math.random()*8);
 
 			for (var p = 0; p < numOfPlatoons; p++) {
 				var platoon = generatePlatoon();
@@ -156,8 +170,22 @@ function matchMaker(){
 					numOfPlayers: 0,
 					timeCreated: Date.now(),
 					teams: null,
-					timeFilled: 0
-				}
+					timeFilled: 0,
+					matchEnd: 0,
+					ended: false,
+					inQueueTimer: null
+				};
+
+				match.inQueueTimer = setTimeout(function(match){
+					unMadeMatches.splice(unMadeMatches.indexOf(match), 1); // remove the match from the unmade queue
+					// reset platoons inqueue status
+					match.platoons.forEach(function(platoon){
+						platoon.inQueue = true;
+					});
+
+					console.log('Reseting match');
+				}, 50000, match);
+
 
 				if(platoon.numOfArty > 0){
 					match.artyPerTeam[0] = platoon.numOfArty;
@@ -192,11 +220,27 @@ function matchMaker(){
 				if(unMadeMatches[matchIndex].numOfPlayers == 30){ // is the match full?
 					// put timestamp in match for when it was finished
 					unMadeMatches[matchIndex].timeFilled = Date.now();
+
+					unMadeMatches[matchIndex].matchEnd = Date.now() + ((Math.floor(Math.random()*13)+2)*60000);
+					unMadeMatches[matchIndex].timer = setTimeout(function(match){
+						console.log('Ending match; players before: '+players.length);
+						match.ended = true;
+						match.platoons.forEach(function(platoon){
+							platoon.players.forEach(function(player){
+								players.push(player);
+							});
+						});
+						console.log('Ending match; players after: '+players.length);
+					}, (unMadeMatches[matchIndex].matchEnd - unMadeMatches[matchIndex].timeFilled), unMadeMatches[matchIndex]);
+
+					// balance teams
+					balanceTeam(unMadeMatches[matchIndex]);
+
 					// move match to the made matches stack
 					madeMatches.push(unMadeMatches[matchIndex]);
 
 					// add match to table --new
-					$('#matchSummary').dataTable().fnAddData([unMadeMatches[matchIndex].id, unMadeMatches[matchIndex].lowerTier+' - '+unMadeMatches[matchIndex].upperTier, unMadeMatches[matchIndex].lowerEff+' - '+unMadeMatches[matchIndex].upperEff, Math.floor((unMadeMatches[matchIndex].timeFilled-unMadeMatches[matchIndex].timeCreated)/1000), unMadeMatches[matchIndex].platoons.length, unMadeMatches[matchIndex].battlePoints, unMadeMatches[matchIndex].numOfPlayers]);
+					$('#matchSummary').dataTable().fnAddData([unMadeMatches[matchIndex].id, unMadeMatches[matchIndex].lowerTier+' - '+unMadeMatches[matchIndex].upperTier, unMadeMatches[matchIndex].lowerEff+' - '+unMadeMatches[matchIndex].upperEff, Math.floor((unMadeMatches[matchIndex].timeFilled-unMadeMatches[matchIndex].timeCreated)/1000), ((unMadeMatches[matchIndex].matchEnd - unMadeMatches[matchIndex].timeFilled)/60000), unMadeMatches[matchIndex].platoons.length, unMadeMatches[matchIndex].battlePoints, unMadeMatches[matchIndex].numOfPlayers]);
 					var source = $('#matchTable').html();
 					var template = Handlebars.compile(source);
 					$('#madeContainer').append(template(unMadeMatches[matchIndex]));
@@ -227,34 +271,72 @@ function matchMaker(){
 	displayMatches();*/
 }
 
-function displayMatches(){
-	var data = [];
+// function displayMatches(){
+// 	var data = [];
 
-	// Clear containers
-	$('#madeContainer').html('');
-	$('#unMadeContainer').html('');
+// 	// Clear containers
+// 	$('#madeContainer').html('');
+// 	$('#unMadeContainer').html('');
 
-	madeMatches.forEach(function(element, index, array){
-		/*var source = $('#matchTable').html();
-		var template = Handlebars.compile(source);
+// 	madeMatches.forEach(function(element, index, array){
+// 		/*var source = $('#matchTable').html();
+// 		var template = Handlebars.compile(source);
 
-		$('#madeContainer').append(template(element));*/
+// 		$('#madeContainer').append(template(element));*/
 
-		data.push([element.id, element.lowerTier+' - '+element.upperTier, element.lowerEff+' - '+element.upperEff, element.timeFilled-element.timeCreated, element.platoons.length, element.battlePoints, element.numOfPlayers]);
+// 		data.push([element.id, element.lowerTier+' - '+element.upperTier, element.lowerEff+' - '+element.upperEff, element.timeFilled-element.timeCreated, ((element.matchEnd - element.timeFilled)/60000), element.platoons.length, element.battlePoints, element.numOfPlayers]);
+// 	});
+
+// /*	unMadeMatches.forEach(function(element, index, array){
+// 		var source = $('#matchTable').html();
+// 		var template = Handlebars.compile(source);
+
+// 		$('#unMadeContainer').append(template(element));
+
+// 		data.push([element.id, element.lowerTier+' - '+element.upperTier, element.lowerEff+' - '+element.upperEff, element.timeFilled-element.timeCreated, element.platoons.length, element.battlePoints, element.numOfPlayers]);
+// 	});*/
+
+// 	// $('.matchTable').dataTable();
+// 	$('#matchSummary').dataTable().fnClearTable();
+// 	$('#matchSummary').dataTable().fnAddData(data);
+// }
+
+function balanceTeam(match){
+	// sort platoons according to battle points
+	match.platoons.sort(function(ele1, ele2){
+		return ele2.battlePoints - ele1.battlePoints;
 	});
 
-/*	unMadeMatches.forEach(function(element, index, array){
-		var source = $('#matchTable').html();
-		var template = Handlebars.compile(source);
+	match.teams = [{
+		id: 1,
+		platoons: [],
+		battlePoints: 0,
+		numOfPlayers: 0
+	},
+	{
+		id: 2,
+		platoons: [],
+		battlePoints: 0,
+		numOfPlayers: 0
+	}];
 
-		$('#unMadeContainer').append(template(element));
-
-		data.push([element.id, element.lowerTier+' - '+element.upperTier, element.lowerEff+' - '+element.upperEff, element.timeFilled-element.timeCreated, element.platoons.length, element.battlePoints, element.numOfPlayers]);
-	});*/
-
-	// $('.matchTable').dataTable();
-	$('#matchSummary').dataTable().fnClearTable();
-	$('#matchSummary').dataTable().fnAddData(data);
+	for (var i = 0; i < match.platoons.length; i++) {
+		if(match.teams[0].battlePoints <= match.teams[1].battlePoints && (match.teams[0].numOfPlayers + match.platoons[i].numOfPlayers) <= 15){ // put platoon into team 1
+			match.teams[0].platoons.push(match.platoons[i]);
+			match.teams[0].battlePoints += match.platoons[i].battlePoints;
+			match.teams[0].numOfPlayers += match.platoons[i].numOfPlayers;
+		}
+		else if( (match.teams[1].numOfPlayers + match.platoons[i].numOfPlayers) <= 15 ){ // put platoon into team 2 if not full
+			match.teams[1].platoons.push(match.platoons[i]);
+			match.teams[1].battlePoints += match.platoons[i].battlePoints;
+			match.teams[1].numOfPlayers += match.platoons[i].numOfPlayers;
+		}
+		else{ // put platoon into team 1, this is because team 2 is full
+			match.teams[0].platoons.push(match.platoons[i]);
+			match.teams[0].battlePoints += match.platoons[i].battlePoints;
+			match.teams[0].numOfPlayers += match.platoons[i].numOfPlayers;
+		}
+	}
 }
 
 function removeFromQueue(platoonsList){
