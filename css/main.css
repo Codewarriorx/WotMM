@@ -6,7 +6,11 @@ body{
 	width: auto;
 }
 
-#matchContainer .dataTables_wrapper+h3{
+#tanksContainer input, #playersContainer input, #platoonsContainer input, #matchSumContainer input{
+	width: auto;
+}
+
+.dataTables_wrapper+h3{
 	margin-top: 30px;
 }
 

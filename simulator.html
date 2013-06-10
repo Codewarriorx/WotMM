@@ -29,7 +29,8 @@
 		<div class="row-fluid">
 			<div class="span2">
 				<ul class="subMenu nav nav-list">
-					<li class="active"><a href="#controls">Controls</a></li>
+					<li class="active"><a href="#info">Info</a></li>
+					<li><a href="#controls">Controls</a></li>
 					<li><a href="#population">Population Info</a></li>
 					<li><a href="#matches">Matches</a></li>
 					<li class="nav-header">Match Listings</li>
@@ -38,15 +39,18 @@
 				</ul>
 			</div>
 			<div class="span10">
-				<div class="row-fluid">
+				<div id="info" class="row-fluid section">
 					<div class="span12">
 						<p>Eff rating spread that is generated for the players will be 300-2000 with mean of 900</p>
 						<p>When match making players will be taken randomly and put into the queue for the match maker, matches will be made with 2 tier tank spread and 400 eff spread</p>
 					</div>
 				</div>
-				<div id="controls" class="row-fluid section">
-					<div class="span6">
+
+				<div id="controls" class="row-fluid section hiddenSection">
+					<div class="row-fluid" id="stats"></div>
+					<div class="row-fluid">
 						<form name="matchMakerSetup">
+							<h3>Controls:</h3>
 							<span>Number of Tanks: 290</span>
 							<label for="tankNum">Number of Players:</label>
 							<input type="text" name="playerNum" placeholder="20000">
@@ -54,8 +58,9 @@
 						</form>
 						<a href="#" class="btn btn-primary" name="simulator">Start Simulator</a>
 					</div>
-					<div class="span6" id="stats"></div>
 				</div>
+				
+				
 				<div id="population" class="row-fluid section hiddenSection">
 					<div class="span4" id="tanksContainer">
 						<h2>Tanks:</h2>
@@ -116,6 +121,7 @@
 									<th>Tier Spread</th>
 									<th>Eff Spread</th>
 									<th>Time Until Filled (sec)</th>
+									<th>Duration (Min)</th>
 									<th># of Platoons</th>
 									<th>Battle Points</th>
 									<th># of Players</th>
@@ -152,49 +158,55 @@
 
 	<!-- Templates -->
 	<script id="statListing" type="text/x-handlebars-template">
-		<h3>Stats for Match Making Queue:</h3>
-		<p>Players Not in Queue: {{popNotInQueue}}</p>
-		<p>Players in Queue: {{numOfPlayers}}</p>
-		<p>Platoons in Queue: {{numOfPlatoons}}</p>
-		<p>Total Platoons: {{totalPlatoons}}</p>
-		
-		<p>Average Eff: {{avgEff}}</p>
-		<p>Made Matches: {{madeMatches}}</p>
-		<p>Un-Made Matches: {{unMadeMatches}}</p>
-		<p>Avg Time to Complete Match: {{avgMatchTime}} (sec)</p>
+		<div class="span4">
+			<h3>Stats for Match Making Queue:</h3>
+			<p>Players Not in Queue: {{popNotInQueue}}</p>
+			<p>Players in Queue: {{numOfPlayers}}</p>
+			<p>Platoons in Queue: {{numOfPlatoons}}</p>
+			<p>Total Platoons: {{totalPlatoons}}</p>
+			
+			<p>Average Eff: {{avgEff}}</p>
+			<p>Made Matches: {{madeMatches}}</p>
+			<p>Un-Made Matches: {{unMadeMatches}}</p>
+			<p>Avg Time to Complete Match: {{avgMatchTime}} (sec)</p>
+		</div>
 
-		<h4>Tanks by Tier:</h4>
-		<table class="table table-condensed">
-			<thead>
-				<tr>
-					<th>Tier</th>
-					<th>Count</th>
-				</tr>
-			</thead>
-			<tbody>
-				{{#byTier tanksByTier}}
+		<div class="span4">
+			<h4>Tanks by Tier:</h4>
+			<table class="table table-condensed">
+				<thead>
 					<tr>
-						<td>{{tier}}</td><td>{{count}}</td>
+						<th>Tier</th>
+						<th>Count</th>
 					</tr>
-				{{/byTier}}
-			</tbody>
-		</table>
-		<h4>Tanks by Type:</h4>
-		<table class="table table-condensed">
-			<thead>
-				<tr>
-					<th>Type</th>
-					<th>Count</th>
-				</tr>
-			</thead>
-			<tbody>
-				{{#byType tanksByType}}
+				</thead>
+				<tbody>
+					{{#byTier tanksByTier}}
+						<tr>
+							<td>{{tier}}</td><td>{{count}}</td>
+						</tr>
+					{{/byTier}}
+				</tbody>
+			</table>
+		</div>
+		<div class="span4">
+			<h4>Tanks by Type:</h4>
+			<table class="table table-condensed">
+				<thead>
 					<tr>
-						<td>{{type}}</td><td>{{count}}</td>
+						<th>Type</th>
+						<th>Count</th>
 					</tr>
-				{{/byType}}
-			</tbody>
-		</table>
+				</thead>
+				<tbody>
+					{{#byType tanksByType}}
+						<tr>
+							<td>{{type}}</td><td>{{count}}</td>
+						</tr>
+					{{/byType}}
+				</tbody>
+			</table>
+		</div>
 	</script>
 
 	<script id="matchTable" type="text/x-handlebars-template">
@@ -220,8 +232,10 @@
 									<h2>Match {{this.id}}:</h2>
 									<p>Match Tier Spread: {{this.lowerTier}} - {{this.upperTier}}</p>
 									<p>Match Eff Spread: {{this.lowerEff}} - {{this.upperEff}}</p>
-									<p>Time Created: {{this.timeCreated}}</p>
-									<p>Time Filled: {{this.timeFilled}}</p>
+									<p>Time Created: {{timeFormat this.timeCreated}}</p>
+									<p>Time Filled: {{timeFormat this.timeFilled}}</p>
+									<p>Time Until Filled: {{timeLapsed this}} (min)</p>
+									<p>Match Length: {{matchLength this}} (min)</p>
 									<p>Number of Platoons: {{this.platoons.length}}</p>
 									<p>Number of Players: {{this.numOfPlayers}}</p>
 									<p>Battle Points: {{this.battlePoints}}</p>
